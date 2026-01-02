@@ -444,61 +444,80 @@ namespace UniversityCardManagementSystem
         {
             if (File.Exists("students.json"))
             {
-                string json = File.ReadAllText("students.json");
-                Students = JsonSerializer.Deserialize<List<Student>>(json) ?? new List<Student>();
+                using (FileStream fs = new FileStream("students.json", FileMode.Open, FileAccess.Read))
+                {
+                    Students = JsonSerializer.Deserialize<List<Student>>(fs) ?? new List<Student>();
+                }
             }
             else
                 Students = new List<Student>();
 
             if (File.Exists("faculty.json"))
             {
-                string json = File.ReadAllText("faculty.json");
-                FacultyMembers = JsonSerializer.Deserialize<List<FacultyMember>>(json) ?? new List<FacultyMember>();
+                using (FileStream fs = new FileStream("faculty.json", FileMode.Open, FileAccess.Read))
+                {
+                    FacultyMembers = JsonSerializer.Deserialize<List<FacultyMember>>(fs) ?? new List<FacultyMember>();
+                }
             }
             else
                 FacultyMembers = new List<FacultyMember>();
 
             if (File.Exists("cards.json"))
             {
-                string json = File.ReadAllText("cards.json");
-                Cards = JsonSerializer.Deserialize<List<Card>>(json) ?? new List<Card>();
+                using (FileStream fs = new FileStream("cards.json", FileMode.Open, FileAccess.Read))
+                {
+                    Cards = JsonSerializer.Deserialize<List<Card>>(fs) ?? new List<Card>();
+                }
             }
             else
                 Cards = new List<Card>();
 
             if (File.Exists("transactions.json"))
             {
-                string json = File.ReadAllText("transactions.json");
-                Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
+                using (FileStream fs = new FileStream("transactions.json", FileMode.Open, FileAccess.Read))
+                {
+                    Transactions = JsonSerializer.Deserialize<List<Transaction>>(fs) ?? new List<Transaction>();
+                }
             }
             else
                 Transactions = new List<Transaction>();
 
             if (File.Exists("attendance.json"))
             {
-                string json = File.ReadAllText("attendance.json");
-                Attendances = JsonSerializer.Deserialize<List<Attendance>>(json) ?? new List<Attendance>();
+                using (FileStream fs = new FileStream("attendance.json", FileMode.Open, FileAccess.Read))
+                {
+                    Attendances = JsonSerializer.Deserialize<List<Attendance>>(fs) ?? new List<Attendance>();
+                }
             }
             else
                 Attendances = new List<Attendance>();
         }
         private void SaveALLFiles()
         {
-            File.WriteAllText("students.json",
-                JsonSerializer.Serialize(Students, new JsonSerializerOptions { WriteIndented = true }));
+            using (FileStream fs = new FileStream("students.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, Students);
+            }
 
-            File.WriteAllText("faculty.json",
-                JsonSerializer.Serialize(FacultyMembers, new JsonSerializerOptions { WriteIndented = true }));
+            using (FileStream fs = new FileStream("faculty.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, FacultyMembers);
+            }
 
-            File.WriteAllText("cards.json",
-                JsonSerializer.Serialize(Cards, new JsonSerializerOptions { WriteIndented = true }));
+            using (FileStream fs = new FileStream("cards.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, Cards);
+            }
 
-            File.WriteAllText("transactions.json",
-                JsonSerializer.Serialize(Transactions, new JsonSerializerOptions { WriteIndented = true }));
+            using (FileStream fs = new FileStream("transactions.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, Transactions);
+            }
 
-            File.WriteAllText("attendance.json",
-                JsonSerializer.Serialize(Attendances, new JsonSerializerOptions { WriteIndented = true }));
-
+            using (FileStream fs = new FileStream("attendance.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, Attendances);
+            }
         }
         public Card GetCard(int cardNumber)
         {
