@@ -1,3 +1,8 @@
+// yazeed barakat - ID 165936
+// qusai awawdeh - Id 172298
+// moath abu khait - Id 164369
+
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +21,7 @@ namespace UniversityCardManagementSystem
             this.UserID = user_ID;
             this.Name = name;
         }
-        public User() 
+        public User()
         {
             UserID = "";
             Name = "";
@@ -25,7 +30,7 @@ namespace UniversityCardManagementSystem
 
     class Student : User
     {
-        public List<string> RegisteredCourses;
+        public List<string> RegisteredCourses { get; set; }
 
         public Student(string user_ID, string name, List<string> regestird_courses)
             : base(user_ID, name)
@@ -68,7 +73,7 @@ namespace UniversityCardManagementSystem
 
     class FacultyMember : User
     {
-        public List<string> TaughtCourses;
+        public List<string> TaughtCourses { get; set; }
 
         public FacultyMember(string user_ID, string name, List<string> taught_courses)
             : base(user_ID, name)
@@ -127,7 +132,7 @@ namespace UniversityCardManagementSystem
             Type = type;
         }
 
-        public Card() 
+        public Card()
         {
             CardNumber = 0;
             Balance = 0;
@@ -193,13 +198,14 @@ namespace UniversityCardManagementSystem
 
         public void Display_Transaction()
         {
-            Console.WriteLine("Transaction ID: " + TransactionID + " Card Number: " + CardNumber + " Type: " + Type + " Amount: " + Amount);
+            string amountStr = Amount != 0 ? Amount.ToString() + " JD" : "N/A";
+            Console.WriteLine("Transaction ID: " + TransactionID + " Card Number: " + CardNumber + " Type: " + Type + " Amount: " + amountStr);
         }
 
         public override string ToString()
         {
             string amountStr = Amount != 0 ? Amount.ToString() : "N/A";
-            return $"{TransactionID},{CardNumber},{Type},{amountStr}";
+            return TransactionID + "," + CardNumber + "," + Type + "," + amountStr;
         }
     }
 
@@ -207,7 +213,7 @@ namespace UniversityCardManagementSystem
     {
         public string Course_ID { get; set; }
         public string Date { get; set; }
-        public List<string> Attendees;
+        public List<string> Attendees { get; set; }
 
         public Attendance(string course_ID, string date)
         {
@@ -436,63 +442,57 @@ namespace UniversityCardManagementSystem
         }
         private void LoadFromFiles()
         {
-            if (File.Exists("students.json"))
+            using (FileStream fs = new FileStream("students.json", FileMode.Open, FileAccess.Read))
             {
-                string json = File.ReadAllText("students.json");
-                Students = JsonSerializer.Deserialize<List<Student>>(json) ?? new List<Student>();
+                Students = JsonSerializer.Deserialize<List<Student>>(fs);
             }
-            else
-                Students = new List<Student>();
 
-            if (File.Exists("faculty.json"))
+            using (FileStream fs = new FileStream("faculty.json", FileMode.Open, FileAccess.Read))
             {
-                string json = File.ReadAllText("faculty.json");
-                FacultyMembers = JsonSerializer.Deserialize<List<FacultyMember>>(json) ?? new List<FacultyMember>();
+                FacultyMembers = JsonSerializer.Deserialize<List<FacultyMember>>(fs);
             }
-            else
-                FacultyMembers = new List<FacultyMember>();
 
-            if (File.Exists("cards.json"))
+            using (FileStream fs = new FileStream("cards.json", FileMode.Open, FileAccess.Read))
             {
-                string json = File.ReadAllText("cards.json");
-                Cards = JsonSerializer.Deserialize<List<Card>>(json) ?? new List<Card>();
+                Cards = JsonSerializer.Deserialize<List<Card>>(fs);
             }
-            else
-                Cards = new List<Card>();
 
-            if (File.Exists("transactions.json"))
+            using (FileStream fs = new FileStream("transactions.json", FileMode.Open, FileAccess.Read))
             {
-                string json = File.ReadAllText("transactions.json");
-                Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
+                Transactions = JsonSerializer.Deserialize<List<Transaction>>(fs);
             }
-            else
-                Transactions = new List<Transaction>();
 
-            if (File.Exists("attendance.json"))
+            using (FileStream fs = new FileStream("attendance.json", FileMode.Open, FileAccess.Read))
             {
-                string json = File.ReadAllText("attendance.json");
-                Attendances = JsonSerializer.Deserialize<List<Attendance>>(json) ?? new List<Attendance>();
+                Attendances = JsonSerializer.Deserialize<List<Attendance>>(fs);
             }
-            else
-                Attendances = new List<Attendance>();
         }
         private void SaveALLFiles()
         {
-            File.WriteAllText("students.json",
-                JsonSerializer.Serialize(Students, new JsonSerializerOptions { WriteIndented = true }));
+            using (FileStream fs = new FileStream("students.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, Students);
+            }
 
-            File.WriteAllText("faculty.json",
-                JsonSerializer.Serialize(FacultyMembers, new JsonSerializerOptions { WriteIndented = true }));
+            using (FileStream fs = new FileStream("faculty.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, FacultyMembers);
+            }
 
-            File.WriteAllText("cards.json",
-                JsonSerializer.Serialize(Cards, new JsonSerializerOptions { WriteIndented = true }));
+            using (FileStream fs = new FileStream("cards.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, Cards);
+            }
 
-            File.WriteAllText("transactions.json",
-                JsonSerializer.Serialize(Transactions, new JsonSerializerOptions { WriteIndented = true }));
+            using (FileStream fs = new FileStream("transactions.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, Transactions);
+            }
 
-            File.WriteAllText("attendance.json",
-                JsonSerializer.Serialize(Attendances, new JsonSerializerOptions { WriteIndented = true }));
-        
+            using (FileStream fs = new FileStream("attendance.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, Attendances);
+            }
         }
         public Card GetCard(int cardNumber)
         {
@@ -561,6 +561,10 @@ namespace UniversityCardManagementSystem
             {
                 return;
             }
+            Card newCard = new Card(CardNumber, 50, type, "unblocked", UserId);
+            Cards.Add(newCard);
+            SaveALLFiles();
+            Console.WriteLine("Card issued successfully!\n");
         }
         public void BlockCard()
         {
@@ -687,7 +691,7 @@ namespace UniversityCardManagementSystem
             int index = 1;
             foreach (var course in student.RegisteredCourses)
             {
-                Console.WriteLine("[" + index++ + "]   "  + course);
+                Console.WriteLine("[" + index++ + "]   " + course);
             }
             Console.Write("\nEnter course ID: ");
             string courseID = Console.ReadLine();
@@ -725,7 +729,7 @@ namespace UniversityCardManagementSystem
             Console.WriteLine("Attendance recorded successfully!\n");
             Console.Write("\nEnter transaction ID: ");
             string transactionID = Console.ReadLine();
-            Transaction transaction = new Transaction(transactionID, cardNumber, "lecture attendance", 0);
+            Transaction transaction = new Transaction(transactionID, cardNumber, "attendance", 0);
             Transactions.Add(transaction);
             SaveALLFiles();
         }
@@ -742,7 +746,7 @@ namespace UniversityCardManagementSystem
             double totalcost = 0;
             while (true)
             {
-                Console.Write("Enter item number to add to order: ");
+                Console.Write("Enter item number to add to order or 0 to finish: ");
                 int choice = int.Parse(Console.ReadLine());
                 if (choice == 0)
                 {
@@ -806,14 +810,14 @@ namespace UniversityCardManagementSystem
                 Console.WriteLine("Payment successful! New balance: " + card.Balance + " JD");
                 Console.Write("\nEnter transaction ID: ");
                 string transactionID = Console.ReadLine();
-                Transaction transaction = new Transaction(transactionID, cardNumber, "bus ride", trackCost);
+                Transaction transaction = new Transaction(transactionID, cardNumber, "payment", trackCost);
                 Transactions.Add(transaction);
                 SaveALLFiles();
             }
         }
         public void ViewTransactionHistory(int cardNumber)
         {
-         var cardTransactions = new List<Transaction>();
+            var cardTransactions = new List<Transaction>();
             foreach (var transaction in Transactions)
             {
                 if (transaction.CardNumber == cardNumber)
@@ -932,7 +936,7 @@ namespace UniversityCardManagementSystem
         {
             while (true)
             {
-                Console.WriteLine("[1] Issue Card");
+                Console.WriteLine("\n[1] Issue Card");
                 Console.WriteLine("[2] Block Card");
                 Console.WriteLine("[3] Unblock Card");
                 Console.WriteLine("[4] View All Cards");
@@ -967,18 +971,28 @@ namespace UniversityCardManagementSystem
         {
             while (true)
             {
-                Console.WriteLine("\n[1] Student");
-                Console.WriteLine("[2] Faculty Member");
+                Console.WriteLine("\n[1] Login AS Student");
+                Console.WriteLine("[2] Login as Faculty Member");
                 Console.WriteLine("[3] Back To Main Login Screen\n");
                 Console.Write("Enter your choice: ");
 
                 string cardHolderChoice = Console.ReadLine();
-                if (cardHolderChoice == "3")
+                switch (cardHolderChoice)
                 {
-                    return;
+                    case "1":
+                        Console.WriteLine("Hmm, you're trying to login as student");
+                        break;
+                    case "2":
+                        Console.WriteLine("Hmm, you're trying to login as faculty member");
+                        break;
+                    case "3":
+                        return;
+                    default:
+                        Console.WriteLine("Invalid choice! Please try again.");
+                        continue;
                 }
 
-                Console.Write("\n Enter card number: ");
+                Console.Write("\nEnter valid card number: ");
                 int cardNumber;
                 if (!int.TryParse(Console.ReadLine(), out cardNumber))
                 {
