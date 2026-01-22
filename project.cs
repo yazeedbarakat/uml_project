@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
 namespace UniversityCardManagementSystem
@@ -393,6 +395,28 @@ namespace UniversityCardManagementSystem
             return Cost;
         }
     }
+    class ParkSlot
+    {
+        public char Location;
+        public int SlotID;
+        public string UserID;
+        public String Status;
+
+        public ParkSlot(char a, int b, string c, string d)
+        {
+            Location = a;
+            SlotID = b;
+            UserID = c;
+            Status = d;
+        }
+        public ParkSlot()
+        {
+            Location = ' ';
+            SlotID = 0;
+            UserID = " ";
+            Status = " ";
+        }
+    }
 
     class SystemManager
     {
@@ -404,6 +428,7 @@ namespace UniversityCardManagementSystem
         Cafeteria_Service Cafeteria = new Cafeteria_Service();
         Bus_Service Bus = new Bus_Service();
         Car_Parking Parking = new Car_Parking();
+        List<ParkSlot> ParkSlots;
         public SystemManager()
         {
             if (!File.Exists("students.json"))
@@ -436,6 +461,16 @@ namespace UniversityCardManagementSystem
             new Card(30, 95, "student", "blocked", "S03"),
             new Card(40, 160, "student", "unblocked", "S04")
         };
+
+            ParkSlots = new List<ParkSlot>()
+            {
+                new ParkSlot('A',1," ","Availabe"),
+                new ParkSlot('A',2,"F01","Occupied"),
+                new ParkSlot('A',3," ","Availabe"),
+                new ParkSlot('B',1," ","Availabe"),
+                new ParkSlot('B',2," ","Availabe")
+
+            };
             Transactions = new List<Transaction>();
             Attendances = new List<Attendance>();
             SaveALLFiles();
@@ -466,6 +501,10 @@ namespace UniversityCardManagementSystem
             {
                 Attendances = JsonSerializer.Deserialize<List<Attendance>>(fs);
             }
+            using (FileStream fs = new FileStream("ParkSlot.json", FileMode.Open, FileAccess.Read))
+            {
+                ParkSlots = JsonSerializer.Deserialize<List<ParkSlot>>(fs);
+            }
         }
         private void SaveALLFiles()
         {
@@ -492,6 +531,10 @@ namespace UniversityCardManagementSystem
             using (FileStream fs = new FileStream("attendance.json", FileMode.Create, FileAccess.Write))
             {
                 JsonSerializer.Serialize(fs, Attendances);
+            }
+            using (FileStream fs = new FileStream("ParkSlot.json", FileMode.Create, FileAccess.Write))
+            {
+                JsonSerializer.Serialize(fs, ParkSlots);
             }
         }
         public Card GetCard(int cardNumber)
@@ -565,6 +608,65 @@ namespace UniversityCardManagementSystem
             Cards.Add(newCard);
             SaveALLFiles();
             Console.WriteLine("Card issued successfully!\n");
+        }
+        public void ModifyACard(int cardNumber)
+        {
+            foreach (var card in Cards)
+            {
+                if (card.Status == "unblocked")
+                {
+                    Console.WriteLine("Card Number: " + card.CardNumber + " | User ID: " + card.UserID);
+                }
+            }
+            foreach (var card in Cards)
+            {
+                if (card.Status == "blocked")
+                {
+                    Console.WriteLine("Card Number: " + card.CardNumber + " | User ID: " + card.UserID);
+                }
+            }
+            Console.Write("\nEnter card number to modify: ");
+            int cardNum = int.Parse(Console.ReadLine());
+            Card cardToModify = GetCard(cardNum);
+            Console.Write("Enter new balance: ");
+            double newBalance = double.Parse(Console.ReadLine());
+            Console.Write("Enter new Type :");
+            string newType = Console.ReadLine();
+            Console.Write("Enter new Status :");
+            string newStatus = Console.ReadLine();
+            if (cardToModify != null)
+            {
+                cardToModify.Balance = newBalance;
+                cardToModify.Type = newType;
+                cardToModify.Status = newStatus;
+                SaveALLFiles();
+                Console.WriteLine("Card modified successfully!\n");
+            }
+            else
+            {
+                Console.WriteLine("Card not found!\n");
+            }
+        }
+        
+        public void Viewcardsatus(int cardNumber)
+        {
+            foreach (var card in Cards)
+            {
+                Console.WriteLine("Card Number: " + card.CardNumber + " | Status: " + card.Status);
+            }
+            Console.Write("\nEnter card number to view status: ");
+            int cardNum = int.Parse(Console.ReadLine());
+            Card cardToView = GetCard(cardNum);
+            ViewALLCards();
+            double balance = 0;
+            foreach (var transaction in Transactions)
+            {
+                if (transaction.CardNumber == cardNum)
+                {
+                    transaction.Amount += balance;
+                }
+            }
+            Console.WriteLine(balance);
         }
         public void BlockCard()
         {
@@ -904,6 +1006,34 @@ namespace UniversityCardManagementSystem
             }
             attendance.Display_Attendees();
         }
+        public void FindParkingSlot(int cardNumber)
+        {
+            Console.Write("\nEnter location (A/B): ");
+            char location = Console.ReadLine()[0];
+            if (location != 'A' && location != 'B')
+            {
+                Console.WriteLine("Invalid location!");
+                return;
+            }
+            foreach (var slot in ParkSlots)
+            {
+                if (slot.Location == location && slot.Status == "Availabe")
+                {
+                    Console.WriteLine("Available slot found: Location " + slot.Location + " Slot ID " + slot.SlotID);
+                }
+            }
+            Console.Write("\nEnter slotID :");
+            char slotID = char.Parse(Console.ReadLine());
+            foreach (var slot in ParkSlots)
+            {
+                if (slot.SlotID == slotID)
+                {
+                    slot.Status = "Occupied";
+                    slot.UserID = GetCard(cardNumber).UserID;
+                }
+            }
+            
+        }
     }
     class Program
     {
@@ -1075,7 +1205,8 @@ namespace UniversityCardManagementSystem
                 Console.WriteLine("\n[1] Recharge card");
                 Console.WriteLine("[2] Access card parking");
                 Console.WriteLine("[3] Generate attendance report");
-                Console.WriteLine("[4] Logout\n");
+                Console.WriteLine("[4] Find Parking slot");
+                Console.WriteLine("[5] Logout\n");
                 Console.Write("Enter your choice: ");
                 string facultyChoice = Console.ReadLine();
                 switch (facultyChoice)
@@ -1090,6 +1221,9 @@ namespace UniversityCardManagementSystem
                         systemManager.GenerateAttendanceReport(cardnumber);
                         break;
                     case "4":
+                        systemManager.FindParkingSlot(cardnumber);
+                        break;
+                    case "5":
                         return;
                     default:
                         Console.WriteLine("Invalid choice! Please try again.");
